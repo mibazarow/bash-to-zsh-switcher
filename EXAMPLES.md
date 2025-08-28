@@ -1,10 +1,15 @@
 # 📝 Примеры использования
 
+Репозиторий: [https://gitverse.ru/mibazarow/bash-to-zsh-switcher](https://gitverse.ru/mibazarow/bash-to-zsh-switcher)
+
 ## 🚀 Быстрая установка
 
 ### Ubuntu/Debian
 
 ```bash
+# Клонируем репозиторий
+git clone https://gitverse.ru/mibazarow/bash-to-zsh-switcher.git
+
 # Переходим в директорию проекта
 cd bash-to-zsh-switcher
 
@@ -18,6 +23,9 @@ exec zsh
 ### macOS
 
 ```bash
+# Клонируем репозиторий
+git clone https://gitverse.ru/mibazarow/bash-to-zsh-switcher.git
+
 # Переходим в директорию проекта
 cd bash-to-zsh-switcher
 

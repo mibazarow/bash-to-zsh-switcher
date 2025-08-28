@@ -2,16 +2,18 @@
 
 Автоматический установщик и настройщик zsh с плагином autosuggestions для Ubuntu/Debian и macOS систем.
 
+Репозиторий: https://gitverse.ru/mibazarow/bash-to-zsh-switcher
+
 ## 🚀 Быстрый старт
 
 ### Ubuntu/Debian
 
 ```bash
 # Скачать и запустить
-curl -fsSL https://raw.githubusercontent.com/username/repo/main/install-ubuntu.sh | bash
+curl -fsSL https://gitverse.ru/mibazarow/bash-to-zsh-switcher/raw/branch/main/install-ubuntu.sh | bash
 
 # Или клонировать и запустить локально
-git clone <this-repo>
+git clone https://gitverse.ru/mibazarow/bash-to-zsh-switcher.git
 cd bash-to-zsh-switcher
 ./install-ubuntu.sh
 ```
@@ -20,10 +22,10 @@ cd bash-to-zsh-switcher
 
 ```bash
 # Скачать и запустить
-curl -fsSL https://raw.githubusercontent.com/username/repo/main/install-macos.sh | bash
+curl -fsSL https://gitverse.ru/mibazarow/bash-to-zsh-switcher/raw/branch/main/install-macos.sh | bash
 
 # Или клонировать и запустить локально
-git clone <this-repo>
+git clone https://gitverse.ru/mibazarow/bash-to-zsh-switcher.git
 cd bash-to-zsh-switcher
 ./install-macos.sh
 ```
