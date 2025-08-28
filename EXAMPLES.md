@@ -2,12 +2,27 @@
 
 ## 🚀 Быстрая установка
 
+### Ubuntu/Debian
+
 ```bash
 # Переходим в директорию проекта
-cd bash-zsh-switcher
+cd bash-to-zsh-switcher
 
 # Запускаем установку
-./install-zsh-autosuggestions.sh
+./install-ubuntu.sh
+
+# После установки перезагружаемся или запускаем
+exec zsh
+```
+
+### macOS
+
+```bash
+# Переходим в директорию проекта
+cd bash-to-zsh-switcher
+
+# Запускаем установку
+./install-macos.sh
 
 # После установки перезагружаемся или запускаем
 exec zsh
@@ -15,9 +30,21 @@ exec zsh
 
 ## 🧪 Тестирование конфигурации
 
+### Ubuntu/Debian
+
 ```bash
 # Проверить что все работает
-./test-config.sh
+./test-ubuntu.sh
+
+# Если есть проблемы, посмотреть детали
+zsh -c "source ~/.zshrc" || echo "Ошибка в конфигурации"
+```
+
+### macOS
+
+```bash
+# Проверить что все работает
+./test-macos.sh
 
 # Если есть проблемы, посмотреть детали
 zsh -c "source ~/.zshrc" || echo "Ошибка в конфигурации"
@@ -25,12 +52,18 @@ zsh -c "source ~/.zshrc" || echo "Ошибка в конфигурации"
 
 ## 🔄 Откат к bash
 
+### Ubuntu/Debian
+
 ```bash
 # Быстрый откат
-sudo chsh -s /bin/bash $USER
+./uninstall-ubuntu.sh
+```
 
-# Или полный откат с очисткой
-./uninstall.sh
+### macOS
+
+```bash
+# Быстрый откат
+./uninstall-macos.sh
 ```
 
 ## 🎯 Практические примеры
@@ -118,12 +151,27 @@ source ~/.zshrc
 
 ### Flutter не найден
 
+#### Ubuntu/Debian
+
 ```bash
 # Проверить PATH
 echo $PATH | grep flutter
 
 # Добавить вручную в ~/.zsh_local
 echo 'export PATH=$PATH:/snap/bin' >> ~/.zsh_local
+```
+
+#### macOS
+
+```bash
+# Проверить PATH
+echo $PATH | grep flutter
+
+# Добавить вручную в ~/.zsh_local
+echo 'export PATH=$PATH:~/flutter/bin' >> ~/.zsh_local
+
+# Или для Homebrew установки
+echo 'export PATH=$PATH:$(brew --prefix)/opt/flutter/bin' >> ~/.zsh_local
 ```
 
 ### Медленная загрузка zsh
@@ -157,6 +205,64 @@ zsh -c '_zsh_autosuggest_check_completion_length'
 
 # Размер истории
 wc -l ~/.zsh_history
+```
+
+## 🧰 Системные различия
+
+### Ubuntu/Debian особенности
+
+```bash
+# Использует apt для установки пакетов
+sudo apt install zsh git
+
+# Пути по умолчанию
+Android SDK: ~/Android/Sdk
+Flutter: /snap/bin/flutter (если установлен через snap)
+```
+
+### macOS особенности
+
+```bash
+# Использует Homebrew для установки пакетов
+brew install zsh git
+
+# Пути по умолчанию
+Android SDK: ~/Library/Android/sdk
+Flutter: /opt/homebrew/opt/flutter/bin (если установлен через Homebrew)
+Xcode: /Applications/Xcode.app
+```
+
+## 🔧 macOS-специфичные настройки
+
+### Интеграция с Homebrew
+
+```bash
+# Добавить в ~/.zsh_local для поддержки Homebrew Cask 
+echo 'alias brewup="brew update && brew upgrade && brew cleanup"' >> ~/.zsh_local
+echo 'alias cask="brew cask"' >> ~/.zsh_local
+```
+
+### Intelli J IDEA / Android Studio интеграция
+
+```bash
+# Добавить в ~/.zsh_local для поддержки утилит JetBrains
+if [[ -d "/Applications/IntelliJ IDEA.app" ]]; then
+    echo 'alias idea="open -a 'IntelliJ IDEA'"' >> ~/.zsh_local
+fi
+if [[ -d "/Applications/Android Studio.app" ]]; then
+    echo 'alias studio="open -a 'Android Studio'"' >> ~/.zsh_local
+fi
+```
+
+### Интеграция с iTerm2
+
+Если вы используете iTerm2, добавьте в ~/.zsh_local:
+
+```bash
+# Улучшения для iTerm2
+if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
+    test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+fi
 ```
 
 ## 🚀 Дополнительные плагины
@@ -197,4 +303,4 @@ adb devices                   # подключенные устройства
 
 ---
 
-💡 **Совет**: Первые дни печатайте команды полностью, чтобы зsh "запомнил" их для автодополнений!
+💡 **Совет**: Первые дни печатайте команды полностью, чтобы zsh "запомнил" их для автодополнений!

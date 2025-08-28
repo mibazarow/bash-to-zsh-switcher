@@ -1,0 +1,438 @@
+#!/bin/bash
+
+# =============================================================================
+# ZSH + Autosuggestions Installer Script for macOS
+# =============================================================================
+# Автоматическая установка и настройка zsh с autosuggestions для macOS
+# Миграция всех настроек из bash в zsh
+# 
+# Использование: ./install-zsh-autosuggestions-macos.sh
+# =============================================================================
+
+set -e  # Exit on any error
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Function to check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+print_status "🚀 Начинаем установку ZSH с autosuggestions для macOS..."
+
+# 1. Check if running as root
+if [[ $EUID -eq 0 ]]; then
+    print_error "Не запускайте этот скрипт от имени root!"
+    exit 1
+fi
+
+# 2. Install Homebrew if not installed
+if ! command_exists brew; then
+    print_status "Homebrew не установлен. Устанавливаем Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    
+    # Add Homebrew to PATH if needed
+    if [[ -d "/opt/homebrew/bin" ]] && [[ ! "$PATH" == */opt/homebrew/bin* ]]; then
+        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.bash_profile
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -d "/usr/local/bin" ]] && [[ ! "$PATH" == */usr/local/bin* ]]; then
+        echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bash_profile
+        export PATH="/usr/local/bin:$PATH"
+    fi
+    
+    print_success "Homebrew установлен"
+else
+    print_success "Homebrew уже установлен"
+fi
+
+# 3. Install zsh if not installed (although macOS comes with zsh pre-installed since Catalina)
+if ! command_exists zsh; then
+    print_status "Устанавливаем zsh..."
+    brew install zsh
+    print_success "Zsh установлен"
+else
+    print_success "Zsh уже установлен"
+fi
+
+# 4. Install git if not installed
+if ! command_exists git; then
+    print_status "Устанавливаем git..."
+    brew install git
+    print_success "Git установлен"
+else
+    print_success "Git уже установлен"
+fi
+
+# 5. Create backup of existing zsh config
+if [[ -f ~/.zshrc ]]; then
+    print_warning "Создаем резервную копию существующего .zshrc"
+    cp ~/.zshrc ~/.zshrc.backup.$(date +%Y%m%d_%H%M%S)
+fi
+
+# 6. Create zsh plugins directory
+print_status "Создаем директорию для плагинов zsh..."
+mkdir -p ~/.zsh
+
+# 7. Clone zsh-autosuggestions
+if [[ -d ~/.zsh/zsh-autosuggestions ]]; then
+    print_warning "zsh-autosuggestions уже существует, обновляем..."
+    cd ~/.zsh/zsh-autosuggestions
+    git pull
+    cd - > /dev/null
+else
+    print_status "Клонируем zsh-autosuggestions..."
+    git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions
+fi
+print_success "zsh-autosuggestions установлен"
+
+# 8. Backup existing bash configuration
+print_status "Сохраняем настройки из bash..."
+
+# Extract important settings from .bash_profile and .bashrc
+HOMEBREW_ENV=""
+PATH_ADDITIONS=""
+CARGO_ENV=""
+ALIASES=""
+
+# Check both .bash_profile and .bashrc as macOS uses both
+for bash_config in ~/.bash_profile ~/.bashrc; do
+    if [[ -f "$bash_config" ]]; then
+        # Extract Homebrew environment
+        if grep -q "brew shellenv\|HOMEBREW_" "$bash_config" 2>/dev/null; then
+            HOMEBREW_ENV="# Homebrew environment\nif [[ -f \"/opt/homebrew/bin/brew\" ]]; then\n    eval \"\$(/opt/homebrew/bin/brew shellenv)\"\nelif [[ -f \"/usr/local/bin/brew\" ]]; then\n    eval \"\$(/usr/local/bin/brew shellenv)\"\nfi"
+        fi
+        
+        # Extract PATH additions
+        PATH_LINES=$(grep "export PATH" "$bash_config" 2>/dev/null || echo "")
+        if [[ -n "$PATH_LINES" ]]; then
+            PATH_ADDITIONS="${PATH_ADDITIONS}\n${PATH_LINES}"
+        fi
+        
+        # Check for Cargo
+        if grep -q "cargo" "$bash_config" 2>/dev/null; then
+            CARGO_ENV="# Cargo environment\nif [[ -f \"\$HOME/.cargo/env\" ]]; then\n    source \"\$HOME/.cargo/env\"\nfi"
+        fi
+        
+        # Extract aliases
+        if grep -q "^alias " "$bash_config" 2>/dev/null; then
+            ALIASES="${ALIASES}\n$(grep "^alias " "$bash_config" 2>/dev/null)"
+        fi
+    fi
+done
+
+# 9. Create comprehensive .zshrc
+print_status "Создаем новый .zshrc с полной конфигурацией..."
+
+cat > ~/.zshrc << 'ZSHRC_EOF'
+# =============================================================================
+# ZSH Configuration for macOS
+# =============================================================================
+# Auto-generated by zsh-autosuggestions installer
+# Migration from bash with preserved settings
+
+# Source zsh-autosuggestions
+if [[ -f ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
+    source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
+
+# =============================================================================
+# ZSH Options
+# =============================================================================
+setopt AUTO_CD              # Change directory without typing 'cd'
+setopt HIST_VERIFY          # Verify history expansion before execution
+setopt SHARE_HISTORY        # Share history between sessions
+setopt APPEND_HISTORY       # Append to history file
+setopt INC_APPEND_HISTORY   # Add commands to history immediately
+setopt HIST_IGNORE_DUPS     # Ignore duplicate commands in history
+setopt HIST_IGNORE_SPACE    # Ignore commands that start with space
+setopt EXTENDED_GLOB        # Extended globbing
+setopt GLOB_DOTS            # Include dotfiles in globbing
+setopt CORRECT              # Spelling correction for commands
+setopt CORRECT_ALL          # Spelling correction for arguments
+
+# =============================================================================
+# History Configuration
+# =============================================================================
+HISTFILE=~/.zsh_history
+HISTSIZE=50000
+SAVEHIST=50000
+
+# =============================================================================
+# Autosuggestions Configuration
+# =============================================================================
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#808080"
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+
+# =============================================================================
+# Completion System
+# =============================================================================
+autoload -Uz compinit
+compinit
+
+# Case-insensitive completion
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' menu select
+
+# =============================================================================
+# Colors and Prompt
+# =============================================================================
+autoload -U colors && colors
+setopt PROMPT_SUBST
+
+# macOS specific colors for ls
+export CLICOLOR=1
+export LSCOLORS=ExFxBxDxCxegedabagacad
+
+# Colorful prompt
+if [[ "$TERM" == *"256color"* ]] || [[ "$TERM" == "xterm-color" ]]; then
+    PROMPT='%{$fg[green]%}%n@%m%{$reset_color%}:%{$fg[blue]%}%~%{$reset_color%}$ '
+    RPROMPT='%{$fg[yellow]%}[%D{%H:%M:%S}]%{$reset_color%}'
+else
+    PROMPT='%n@%m:%~$ '
+fi
+
+# Window title for xterm
+case "$TERM" in
+    xterm*|rxvt*)
+        precmd() {
+            print -Pn "\e]0;%n@%m: %~\a"
+        }
+        ;;
+esac
+
+# =============================================================================
+# Aliases (macOS specific)
+# =============================================================================
+# Basic file operations
+alias ls='ls -G'
+alias ll='ls -alFG'
+alias la='ls -AG'
+alias l='ls -CFG'
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# Navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias ~='cd ~'
+alias h='history'
+alias j='jobs -l'
+alias which='type -a'
+alias du='du -h'
+alias df='df -h'
+
+# Git aliases
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline'
+
+# macOS specific aliases
+alias showfiles='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder'
+alias hidefiles='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder'
+alias flushdns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
+alias cleanup='find . -type f -name "*.DS_Store" -delete'
+
+# =============================================================================
+# PATH Configuration
+# =============================================================================
+# User's private bin directories
+if [[ -d "$HOME/bin" ]]; then
+    PATH="$HOME/bin:$PATH"
+fi
+
+if [[ -d "$HOME/.local/bin" ]]; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+
+# =============================================================================
+# Environment Variables
+# =============================================================================
+export TERM=xterm-256color
+export EDITOR=nano
+export PAGER=less
+
+# =============================================================================
+# Development Environment Setup
+# =============================================================================
+
+ZSHRC_EOF
+
+# 10. Add preserved bash settings
+if [[ -n "$HOMEBREW_ENV" ]]; then
+    echo "" >> ~/.zshrc
+    echo "# Homebrew (migrated from bash)" >> ~/.zshrc
+    echo -e "$HOMEBREW_ENV" >> ~/.zshrc
+fi
+
+if [[ -n "$PATH_ADDITIONS" ]]; then
+    echo "" >> ~/.zshrc
+    echo "# PATH additions (migrated from bash)" >> ~/.zshrc
+    echo -e "$PATH_ADDITIONS" >> ~/.zshrc
+fi
+
+if [[ -n "$CARGO_ENV" ]]; then
+    echo "" >> ~/.zshrc
+    echo -e "$CARGO_ENV" >> ~/.zshrc
+fi
+
+if [[ -n "$ALIASES" ]]; then
+    echo "" >> ~/.zshrc
+    echo "# Aliases (migrated from bash)" >> ~/.zshrc
+    echo -e "$ALIASES" >> ~/.zshrc
+fi
+
+# Add final section to .zshrc
+cat >> ~/.zshrc << 'ZSHRC_FINAL'
+
+# =============================================================================
+# Custom Configurations
+# =============================================================================
+
+# Load bash aliases if they exist
+if [[ -f ~/.bash_aliases ]]; then
+    source ~/.bash_aliases
+fi
+
+# Load any additional zsh-specific configurations
+if [[ -f ~/.zsh_local ]]; then
+    source ~/.zsh_local
+fi
+
+# =============================================================================
+# macOS Specific Development Tools Auto-Detection
+# =============================================================================
+
+# Auto-detect Homebrew
+if [[ -d "/opt/homebrew" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -d "/usr/local/Homebrew" ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+# Auto-detect Flutter installation
+if command -v flutter >/dev/null 2>&1; then
+    export FLUTTER_ROOT=$(dirname $(dirname $(which flutter)))
+fi
+
+# Auto-detect Android SDK
+if [[ -z "$ANDROID_HOME" ]]; then
+    for possible_path in "$HOME/Library/Android/sdk" "$HOME/Android/sdk"; do
+        if [[ -d "$possible_path" ]]; then
+            export ANDROID_HOME="$possible_path"
+            export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/cmdline-tools/latest/bin
+            break
+        fi
+    done
+fi
+
+# Auto-detect Xcode
+if [[ -d "/Applications/Xcode.app" ]]; then
+    export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+fi
+
+# Auto-detect Node.js tools
+if [[ -d "$HOME/.npm-global/bin" ]]; then
+    export PATH=$PATH:$HOME/.npm-global/bin
+fi
+
+# =============================================================================
+# Welcome Message
+# =============================================================================
+echo "🚀 Zsh с autosuggestions загружен!"
+if command -v flutter >/dev/null 2>&1; then
+    echo "✅ Flutter: $(flutter --version | head -1)"
+fi
+if [[ -n "$ANDROID_HOME" ]]; then
+    echo "✅ Android SDK: $ANDROID_HOME"
+fi
+if [[ -d "/Applications/Xcode.app" ]]; then
+    echo "✅ Xcode: $(xcodebuild -version | head -1)"
+fi
+echo "📝 Подсказки: начните вводить команду и увидите серые предложения"
+echo "🔧 Принять предложение: нажмите → (стрелка вправо)"
+
+ZSHRC_FINAL
+
+print_success ".zshrc создан с полной конфигурацией"
+
+# 11. Change default shell
+print_status "Изменяем оболочку по умолчанию на zsh..."
+
+# Add zsh to the list of allowed shells if it's not already there
+ZSH_PATH=$(which zsh)
+if ! grep -q "$ZSH_PATH" /etc/shells; then
+    print_status "Добавляем $ZSH_PATH в /etc/shells..."
+    echo "$ZSH_PATH" | sudo tee -a /etc/shells > /dev/null
+fi
+
+# Change the default shell
+chsh -s "$ZSH_PATH"
+print_success "Оболочка по умолчанию изменена на zsh"
+
+# 12. Test configuration
+print_status "Тестируем конфигурацию zsh..."
+if zsh -c "source ~/.zshrc" 2>/dev/null; then
+    print_success "Конфигурация zsh работает корректно"
+else
+    print_error "Ошибка в конфигурации zsh"
+    exit 1
+fi
+
+# 13. Final instructions
+echo ""
+echo "============================================================================="
+print_success "🎉 УСТАНОВКА ЗАВЕРШЕНА УСПЕШНО!"
+echo "============================================================================="
+echo ""
+print_status "Что было сделано:"
+echo "  ✅ Установлен Homebrew (если не был установлен)"
+echo "  ✅ Установлен zsh (если не был установлен)"
+echo "  ✅ Установлен zsh-autosuggestions"
+echo "  ✅ Созданы резервные копии существующих конфигураций"
+echo "  ✅ Мигрированы настройки из bash"
+echo "  ✅ Оболочка по умолчанию изменена на zsh"
+echo "  ✅ Настроены автодополнения и подсказки"
+echo ""
+print_status "Для активации изменений:"
+echo "  1. Перезагрузите терминал, ИЛИ"
+echo "  2. Выйдите и войдите в систему, ИЛИ"
+echo "  3. Запустите: exec zsh"
+echo ""
+print_status "После активации вы получите:"
+echo "  🚀 Умные автодополнения команд"
+echo "  📝 Подсказки на основе истории"
+echo "  🎨 Красивый цветной интерфейс"
+echo "  ⚡ Все настройки Homebrew/Flutter/Xcode"
+echo ""
+print_warning "Если что-то пойдет не так, восстановите bash:"
+echo "  chsh -s /bin/bash"
+echo ""
+echo "============================================================================="

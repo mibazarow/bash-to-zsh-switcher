@@ -1,17 +1,31 @@
 # ZSH + Autosuggestions Installer
 
-Автоматический установщик и настройщик zsh с плагином autosuggestions для Ubuntu/Debian систем.
+Автоматический установщик и настройщик zsh с плагином autosuggestions для Ubuntu/Debian и macOS систем.
 
 ## 🚀 Быстрый старт
 
+### Ubuntu/Debian
+
 ```bash
 # Скачать и запустить
-curl -fsSL https://raw.githubusercontent.com/username/repo/main/install-zsh-autosuggestions.sh | bash
+curl -fsSL https://raw.githubusercontent.com/username/repo/main/install-ubuntu.sh | bash
 
 # Или клонировать и запустить локально
 git clone <this-repo>
-cd bash-zsh-switcher
-./install-zsh-autosuggestions.sh
+cd bash-to-zsh-switcher
+./install-ubuntu.sh
+```
+
+### macOS
+
+```bash
+# Скачать и запустить
+curl -fsSL https://raw.githubusercontent.com/username/repo/main/install-macos.sh | bash
+
+# Или клонировать и запустить локально
+git clone <this-repo>
+cd bash-to-zsh-switcher
+./install-macos.sh
 ```
 
 ## 📋 Что делает скрипт
@@ -51,14 +65,28 @@ h, j, which        # Утилиты
 - Node.js tools
 - Cargo (Rust)
 
-## 📁 Структура файлов
+## 📁 Структура проекта
 
 ```
-bash-zsh-switcher/
-├── install-zsh-autosuggestions.sh  # Основной установщик
-├── README.md                       # Эта документация
-├── uninstall.sh                    # Скрипт отката
-└── test-config.sh                  # Тестирование конфигурации
+bash-to-zsh-switcher/
+├── install-ubuntu.sh          # Установщик для Ubuntu/Debian
+├── install-macos.sh           # Установщик для macOS
+├── uninstall-ubuntu.sh        # Скрипт отката для Ubuntu/Debian
+├── uninstall-macos.sh         # Скрипт отката для macOS
+├── test-ubuntu.sh             # Тестирование конфигурации для Ubuntu/Debian
+├── test-macos.sh              # Тестирование конфигурации для macOS
+├── README.md                  # Эта документация
+├── EXAMPLES.md                # Примеры использования
+│
+├── ubuntu-switcher/           # Скрипты для Ubuntu/Debian
+│   ├── install.sh             # Основной установщик 
+│   ├── uninstall.sh           # Скрипт отката
+│   └── test.sh                # Тестирование конфигурации
+│
+└── macos-switcher/            # Скрипты для macOS
+    ├── install.sh             # Основной установщик
+    ├── uninstall.sh           # Скрипт отката
+    └── test.sh                # Тестирование конфигурации
 ```
 
 ## 🔄 Активация
@@ -73,12 +101,18 @@ bash-zsh-switcher/
 
 Если что-то пошло не так:
 
-```bash
-# Вернуть bash как оболочку по умолчанию
-sudo chsh -s /bin/bash $USER
+### Ubuntu/Debian
 
-# Или использовать скрипт отката
-./uninstall.sh
+```bash
+# Использовать скрипт отката
+./uninstall-ubuntu.sh
+```
+
+### macOS
+
+```bash
+# Использовать скрипт отката
+./uninstall-macos.sh
 ```
 
 ## 📂 Резервные копии
@@ -87,9 +121,26 @@ sudo chsh -s /bin/bash $USER
 - `~/.zshrc.backup.YYYYMMDD_HHMMSS` - резервная копия zsh конфига
 - Оригинальные bash файлы остаются нетронутыми
 
+## 🧪 Тестирование конфигурации
+
+После установки вы можете протестировать правильность конфигурации:
+
+### Ubuntu/Debian
+
+```bash
+./test-ubuntu.sh
+```
+
+### macOS
+
+```bash
+./test-macos.sh
+```
+
 ## 🐛 Решение проблем
 
 ### Проблема: autosuggestions не работают
+
 ```bash
 # Проверить установку
 ls ~/.zsh/zsh-autosuggestions/
@@ -97,40 +148,11 @@ ls ~/.zsh/zsh-autosuggestions/
 # Переустановить
 rm -rf ~/.zsh/zsh-autosuggestions
 git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions
+
+# Перезагрузить конфигурацию
+source ~/.zshrc
 ```
 
-### Проблема: Flutter/Android не найдены
-```bash
-# Проверить пути
-echo $ANDROID_HOME
-which flutter
+## 📄 Дополнительная документация
 
-# Добавить в ~/.zsh_local
-echo 'export ANDROID_HOME=/path/to/sdk' >> ~/.zsh_local
-```
-
-## 🎨 Кастомизация
-
-Для дополнительных настроек создайте `~/.zsh_local`:
-
-```bash
-# Пример ~/.zsh_local
-export MY_CUSTOM_VAR="value"
-alias my_alias="command"
-
-# Изменить стиль autosuggestions
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#ff00ff,bold"
-```
-
-## 📊 Системные требования
-
-- Ubuntu 18.04+ / Debian 10+
-- sudo права
-- Интернет соединение
-- ~50MB свободного места
-
-## 🔗 Полезные ссылки
-
-- [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
-- [Zsh Documentation](http://zsh.sourceforge.net/Doc/)
-- [Oh My Zsh](https://ohmyz.sh/) - альтернативный фреймворк
+Подробные примеры использования и решения типичных проблем см. в файле [EXAMPLES.md](EXAMPLES.md).
